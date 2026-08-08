@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MADARA Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0f0f13;
+    }
+
+    .calculator {
+      background: #1a1a2e;
+      border-radius: 24px;
+      padding: 24px;
+      width: 340px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .header h1 {
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header span {
+      color: #e94560;
+    }
+
+    .display {
+      background: #16213e;
+      border-radius: 16px;
+      padding: 20px 16px;
+      margin-bottom: 20px;
+      text-align: right;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      word-break: break-all;
+    }
+
+    .display .expression {
+      color: #666;
+      font-size: 16px;
+      min-height: 24px;
+      margin-bottom: 4px;
+    }
+
+    .display .result {
+      color: #fff;
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      transition: color 0.2s;
+    }
+
+    .display .result.error {
+      color: #e94560;
+      font-size: 22px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 18px 8px;
+      font-size: 20px;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:active {
+      transform: scale(0.93);
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.08);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    button:hover::after {
+      opacity: 1;
+    }
+
+    /* Number buttons */
+    .btn-number {
+      background: #2a2a4a;
+      color: #e0e0ff;
+    }
+
+    .btn-number:hover {
+      background: #35356b;
+    }
+
+    /* Operator buttons */
+    .btn-operator {
+      background: #e94560;
+      color: #fff;
+    }
+
+    .btn-operator:hover {
+      background: #d63851;
+    }
+
+    /* Function buttons (AC, %, +/-) */
+    .btn-function {
+      background: #252542;
+      color: #a0a0cc;
+    }
+
+    .btn-function:hover {
+      background: #303060;
+    }
+
+    /* Special */
+    .btn-equals {
+      background: #e94560;
+      color: #fff;
+    }
+
+    .btn-equals:hover {
+      background: #d63851;
+    }
+
+    /* Span 2 columns */
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    /* Zero button */
+    .btn-zero {
+      grid-column: span 2;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 16px;
+      color: #444;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    .footer a {
+      color: #e94560;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="header">
+      <h1>MADARA <span>🧮</span></h1>
+    </div>
+
+    <div class="display">
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </div>
+
+    <div class="buttons">
+      <!-- Row 1 -->
+      <button class="btn-function" onclick="clearAll()">AC</button>
+      <button class="btn-function" onclick="toggleSign()">+/-</button>
+      <button class="btn-function" onclick="appendOperator('%')">%</button>
+      <button class="btn-operator" onclick="appendOperator('/')">÷</button>
+
+      <!-- Row 2 -->
+      <button class="btn-number" onclick="appendNumber('7')">7</button>
+      <button class="btn-number" onclick="appendNumber('8')">8</button>
+      <button class="btn-number" onclick="appendNumber('9')">9</button>
+      <button class="btn-operator" onclick="appendOperator('*')">×</button>
+
+      <!-- Row 3 -->
+      <button class="btn-number" onclick="appendNumber('4')">4</button>
+      <button class="btn-number" onclick="appendNumber('5')">5</button>
+      <button class="btn-number" onclick="appendNumber('6')">6</button>
+      <button class="btn-operator" onclick="appendOperator('-')">−</button>
+
+      <!-- Row 4 -->
+      <button class="btn-number" onclick="appendNumber('1')">1</button>
+      <button class="btn-number" onclick="appendNumber('2')">2</button>
+      <button class="btn-number" onclick="appendNumber('3')">3</button>
+      <button class="btn-operator" onclick="appendOperator('+')">+</button>
+
+      <!-- Row 5 -->
+      <button class="btn-number btn-zero" onclick="appendNumber('0')">0</button>
+      <button class="btn-number" onclick="appendDot()">.</button>
+      <button class="btn-equals" onclick="calculate()">=</button>
+    </div>
+
+    <div class="footer">
+      🚀 <a href="https://github.com/shubhkumarmishra82-debug/CALCULATOR-" target="_blank">MADARA CALC</a> — Powered by SHUBH KUMAR MISHRA
+    </div>
+  </div>
+
+  <script>
+    let currentInput = '0';
+    let expression = '';
+    let shouldResetInput = false;
+    let justCalculated = false;
+
+    const resultEl = document.getElementById('result');
+    const expressionEl = document.getElementById('expression');
+
+    function updateDisplay() {
+      resultEl.textContent = currentInput;
+      expressionEl.textContent = expression;
+      resultEl.classList.remove('error');
+    }
+
+    function appendNumber(num) {
+      if (justCalculated) {
+        clearAll();
+        justCalculated = false;
+      }
+      if (shouldResetInput) {
+        currentInput = num;
+        shouldResetInput = false;
+      } else {
+        if (currentInput === '0' && num !== '0') {
+          currentInput = num;
+        } else if (currentInput !== '0') {
+          currentInput += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function appendDot() {
+      if (justCalculated) {
+        clearAll();
+        justCalculated = false;
+      }
+      if (shouldResetInput) {
+        currentInput = '0.';
+        shouldResetInput = false;
+        updateDisplay();
+        return;
+      }
+      if (!currentInput.includes('.')) {
+        currentInput += '.';
+      }
+      updateDisplay();
+    }
+
+    function appendOperator(op) {
+      justCalculated = false;
+      const lastChar = expression.slice(-1);
+      const ops = ['+', '-', '*', '/', '%'];
+
+      if (expression === '' && currentInput !== '0') {
+        expression = currentInput + ' ' + getOperatorSymbol(op);
+      } else if (ops.includes(lastChar)) {
+        expression = expression.slice(0, -2) + getOperatorSymbol(op);
+      } else if (expression !== '') {
+        expression += currentInput + ' ' + getOperatorSymbol(op);
+      } else {
+        expression = currentInput + ' ' + getOperatorSymbol(op);
+      }
+
+      shouldResetInput = true;
+      updateDisplay();
+    }
+
+    function getOperatorSymbol(op) {
+      const map = { '*': '×', '/': '÷', '-': '−', '+': '+', '%': '%' };
+      return map[op] || op;
+    }
+
+    function getRealOperator(symbol) {
+      const map = { '×': '*', '÷': '/', '−': '-' };
+      return map[symbol] || symbol;
+    }
+
+    function calculate() {
+      if (expression === '' && currentInput === '0') return;
+
+      justCalculated = true;
+
+      let expr = expression + currentInput;
+      let sanitized = expr;
+
+      // Replace display symbols with real operators
+      sanitized = sanitized.replace(/×/g, '*');
+      sanitized = sanitized.replace(/÷/g, '/');
+      sanitized = sanitized.replace(/−/g, '-');
+
+      try {
+        // Safe eval
+        const result = Function('"use strict"; return (' + sanitized + ')')();
+
+        if (!isFinite(result)) {
+          resultEl.textContent = 'Error';
+          resultEl.classList.add('error');
+          expressionEl.textContent = expr;
+          currentInput = '0';
+          expression = '';
+          return;
+        }
+
+        // Format result
+        const formatted = Number.isInteger(result) ? result.toString() : parseFloat(result.toFixed(8)).toString();
+
+        expressionEl.textContent = expr + ' =';
+        resultEl.textContent = formatted;
+        currentInput = formatted;
+        expression = '';
+      } catch (e) {
+        resultEl.textContent = 'Error';
+        resultEl.classList.add('error');
+        expressionEl.textContent = expr;
+        currentInput = '0';
+        expression = '';
+      }
+    }
+
+    function clearAll() {
+      currentInput = '0';
+      expression = '';
+      shouldResetInput = false;
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function toggleSign() {
+      if (currentInput !== '0') {
+        currentInput = currentInput.startsWith('-') ? currentInput.slice(1) : '-' + currentInput;
+        updateDisplay();
+      }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+      else if (e.key === '.') appendDot();
+      else if (e.key === '+') appendOperator('+');
+      else if (e.key === '-') appendOperator('-');
+      else if (e.key === '*') appendOperator('*');
+      else if (e.key === '/') appendOperator('/');
+      else if (e.key === '%') appendOperator('%');
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') clearAll();
+    });
+  </script>
+</body>
+</html>
+/* Contribution from HellfireDevs */
